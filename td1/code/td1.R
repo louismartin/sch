@@ -27,6 +27,27 @@ qqnorm(y=df$TX10)
 hist(df$TX10, nclass = 50)
 
 # Estimation par MCO
-
 reg <- lm(PER~TX10, df)
 summary(reg)
+
+
+## Partie 2 ------------------
+# ----------------------------
+
+# Taux d'int??r??t r??el
+df$TR <- df$TX10-df$CPI
+
+# R??gression avec le taux d'int??r??t r??el
+regtr <- lm(PER~TR, df)
+summary(regtr)
+
+# RMSE
+rmse <- sqrt(sum(reg$residuals^2)/nrow(df))
+rmse_tr <- sqrt(sum(regtr$residuals^2)/nrow(df))
+
+# MAE
+mae <- sum(abs(reg$residuals))/nrow(df)
+mae_tr <- sum(abs(regtr$residuals))/nrow(df)
+
+# Question 7
+
