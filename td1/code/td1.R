@@ -1,5 +1,5 @@
 filepath <- "../data/Data_centrale_fed_model_vf.csv"
-df <- read.csv(filepath, sep=";")
+df <- read.csv(filepath, sep=";", dec = ",")
 
 # Remove empty rows
 df[df==""] <- NA
