@@ -51,3 +51,27 @@ mae_tr <- sum(abs(regtr$residuals))/nrow(df)
 
 # Question 7
 
+# Question 8
+# Estimation de la stabilite de beta par moyenne glissante
+nrows <- nrow(df)
+window <- 50
+n_windows = nrows%/%window
+betas = c()
+confints = matrix(0, n_windows, 2)
+for (i in 1:n_windows+1) {
+  start <- (i-1)*window
+  end <- min((i)*window, nrows)
+  print(end)
+  reg <- lm(PER~TR, df[start:end, ])
+  print(reg$coefficients[2])
+  betas <- c(betas, c(reg$coefficients[2]))
+  print(c(confint(reg, 'TR', level=0.95)))
+  confints[i, ] <- c(confint(reg, 'TR', level=0.95))
+}
+ymin = min(c(betas, confints))
+ymax = max(c(betas, confints))
+plot(betas, ylim = c(ymin, ymax))
+lines(confints[, 1], ylim = c(ymin, ymax))
+lines(confints[, 2], ylim = c(ymin, ymax))
+mean(betas)
+plot(df$PER, df$TR)
