@@ -19,3 +19,14 @@ legend("topright",legend = c('PER', 'TX10'), col = c('red', 'blue'), lwd = c(1,1
 
 # Plot PER / TX10
 plot(df$TX10, df$PER, xlab = 'TX10', ylab = 'PER')
+
+# Quantiles de l'endog??ne TX10
+qqnorm(y=df$TX10)
+
+# Distribution empirique de l'endog??ne TX10
+hist(df$TX10, nclass = 50)
+
+# Estimation par MCO
+
+reg <- lm(PER~TX10, df)
+summary(reg)
