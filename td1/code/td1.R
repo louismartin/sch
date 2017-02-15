@@ -50,6 +50,25 @@ mae <- sum(abs(reg$residuals))/nrow(df)
 mae_tr <- sum(abs(regtr$residuals))/nrow(df)
 
 # Question 7
+h = 1
+d <- c()
+for (t in 2:(nrow(df)-h)){
+    prior <-  df[1:t,] 
+    reg <- lm(PER~TX10, prior)
+    regtr <- lm(PER~TR, prior)
+    pred <- predict(reg, newdata = df[t+h,])
+    predtr <- predict(regtr, newdata = df[t+h,])
+    real <- df$PER[t+h]
+    d[t-1] <-  (pred-real)^2 - (predtr-real)^2
+}
+dbar <-  mean(d)
+gamma <- c()
+m <- length(d)
+for (j in 1:m){
+    gamma[j] <- sum((d[j:m]-dbar)*(d[1:(m-j+1)]-dbar))/m
+}
+w <-gamma[1] +2*sum(gamma[2:m]) 
+sdm = dbar / sqrt(abs(w))
 
 # Question 8.a
 beta_estimation <- function(window=5) {
@@ -78,3 +97,4 @@ beta_estimation(10)
 require("strucchange")
 fluct <- efp(PER~TR, type="Rec-CUSUM", data=df)
 plot(fluct)
+
