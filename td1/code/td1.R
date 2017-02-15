@@ -50,25 +50,37 @@ mae <- sum(abs(reg$residuals))/nrow(df)
 mae_tr <- sum(abs(regtr$residuals))/nrow(df)
 
 # Question 7
-h = 1
-d <- c()
-for (t in 2:(nrow(df)-h)){
-    prior <-  df[1:t,] 
-    reg <- lm(PER~TX10, prior)
-    regtr <- lm(PER~TR, prior)
-    pred <- predict(reg, newdata = df[t+h,])
-    predtr <- predict(regtr, newdata = df[t+h,])
-    real <- df$PER[t+h]
-    d[t-1] <-  (pred-real)^2 - (predtr-real)^2
+
+dmTest <- function(h){
+    # Diff??rences d'erreurs de pr??diction
+    d <- c()
+    for (t in 2:(nrow(df)-h)){
+        prior <-  df[1:t,] 
+        reg <- lm(PER~TX10, prior)
+        regtr <- lm(PER~TR, prior)
+        pred <- predict(reg, newdata = df[t+h,])
+        predtr <- predict(regtr, newdata = df[t+h,])
+        real <- df$PER[t+h]
+        d[t-1] <-  (real-pred)^2 - (real-predtr)^2
+    }
+    dbar <-  mean(d)
+    
+    # Autocovariance empirique des diff??rences
+    gamma <- c()
+    m <- length(d)
+    for (j in 1:m){
+        gamma[j] <- sum((d[j:m]-dbar)*(d[1:(m-j+1)]-dbar))/m
+    }
+    
+    # Statistique du test de Diebold et Mariano
+    w <-gamma[1] +2*sum(gamma[2:m])
+    sdm = dbar / sqrt(abs(w))
+    
+    print(paste("|SDM| :", abs(sdm)))
+    if (abs(sdm)>1.96) print("Hypothese nulle rejetee au seuil de 5%")
+    else print("Hypothese nulle non rejetee au seuil de 5%")
 }
-dbar <-  mean(d)
-gamma <- c()
-m <- length(d)
-for (j in 1:m){
-    gamma[j] <- sum((d[j:m]-dbar)*(d[1:(m-j+1)]-dbar))/m
-}
-w <-gamma[1] +2*sum(gamma[2:m]) 
-sdm = dbar / sqrt(abs(w))
+dmTest(3)
 
 # Question 8.a
 beta_estimation <- function(window=5) {
@@ -98,3 +110,8 @@ require("strucchange")
 fluct <- efp(PER~TR, type="Rec-CUSUM", data=df)
 plot(fluct)
 
+# Question 9
+acf(regtr$residuals)
+pacf(regtr$residuals)
+# La lente d??croissance des autocorr??lations semble indiquer une tendance non ??limin??e.
+# Avec l'autocorr??lation partielle en revanche, on ne note pas d'autocorr??lation avec lag
