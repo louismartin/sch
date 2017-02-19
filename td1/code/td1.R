@@ -1,12 +1,10 @@
 filepath <- "../data/Data_centrale_fed_model_vf.csv"
+
 df <- read.csv(filepath, sep=";", dec = ",")
 
 # Remove empty rows
 df[df==""] <- NA
 df <- na.omit(df)
-
-# Plot TER
-
 
 # Plot PER & TX10
 ymax <- max(max(df$PER),max(df$TX10))
@@ -20,11 +18,11 @@ legend("topright",legend = c('PER', 'TX10'), col = c('red', 'blue'), lwd = c(1,1
 # Plot PER / TX10
 plot(df$TX10, df$PER, xlab = 'TX10', ylab = 'PER')
 
-# Quantiles de l'endog??ne TX10
-qqnorm(y=df$TX10)
+# Quantiles de l'endogene PER
+qqnorm(y=df$PER)
 
-# Distribution empirique de l'endog??ne TX10
-hist(df$TX10, nclass = 50)
+# Distribution empirique de l'endogene TX10
+hist(df$PER, nclass = 50)
 
 # Estimation par MCO
 reg <- lm(PER~TX10, df)
@@ -34,10 +32,10 @@ summary(reg)
 ## Partie 2 ------------------
 # ----------------------------
 
-# Taux d'int??r??t r??el
+# Taux d'interet reel
 df$TR <- df$TX10-df$CPI
 
-# R??gression avec le taux d'int??r??t r??el
+# Regression avec le taux d'interet reel
 regtr <- lm(PER~TR, df)
 summary(regtr)
 
@@ -52,7 +50,7 @@ mae_tr <- sum(abs(regtr$residuals))/nrow(df)
 # Question 7
 
 dmTest <- function(h){
-    # Diff??rences d'erreurs de pr??diction
+    # Differences d'erreurs de prediction
     d <- c()
     for (t in 2:(nrow(df)-h)){
         prior <-  df[1:t,] 
@@ -65,7 +63,7 @@ dmTest <- function(h){
     }
     dbar <-  mean(d)
     
-    # Autocovariance empirique des diff??rences
+    # Autocovariance empirique des differences
     gamma <- c()
     m <- length(d)
     for (j in 1:m){
@@ -113,5 +111,5 @@ plot(fluct)
 # Question 9
 acf(regtr$residuals)
 pacf(regtr$residuals)
-# La lente d??croissance des autocorr??lations semble indiquer une tendance non ??limin??e.
-# Avec l'autocorr??lation partielle en revanche, on ne note pas d'autocorr??lation avec lag
+# La lente decroissance des autocorrelations semble indiquer une tendance non eliminee.
+# Avec l'autocorrelation partielle en revanche, on ne note pas d'autocorrelation avec lag
