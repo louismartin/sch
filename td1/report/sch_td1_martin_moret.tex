@@ -1,0 +1,149 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{graphicx}       % include graphics
+\usepackage{subcaption}     % subfigures
+\usepackage{float}          % placement of floats
+\usepackage{fancyhdr}       % head notes and foot notes
+\usepackage{bbm}            % Nice symbols
+\usepackage{mathtools}      % Math tools like operators
+\usepackage{listings}       % Write code in a listing
+\usepackage[left=2.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
+
+\graphicspath{ {assets/} }
+
+% Operators
+\DeclarePairedDelimiter\abs{\lvert}{\rvert} % abs
+\DeclarePairedDelimiter\norm{\lVert}{\rVert} % norm
+\DeclareMathOperator*{\argmax}{arg\,max} % argmax
+\newcommand{\p}{\mathbbm{P}} % Big P for probabilties
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}  % Partial derivative
+\newcommand{\betahat}{\hat{\beta}}
+\newcommand{\alphahat}{\hat{\alpha}}
+\newcommand{\yhat}{\hat{y}}
+\newcommand{\xhat}{\hat{x}}
+\newcommand{\ybar}{\overline{y}}
+\newcommand{\xbar}{\overline{x}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Sections naming conventions
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{(\alph{subsection})}
+\renewcommand{\thesubsubsection}{\roman{subsubsection}.}
+
+% Head and foot notes
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Quentin Moret, Louis Martin}
+\rhead{Série temporelles: TD 1}
+\rfoot{Page \thepage}
+
+\title{Série temporelles: TD 1}
+\author{Quentin Moret \\
+        \href{mailto:quentin.moret@student.ecp.fr}{\tt quentin.moret@student.ecp.fr}
+        \and Louis Martin\\
+        \href{mailto:louis.martin@student.ecp.fr}{\tt louis.martin@student.ecp.fr}}
+
+\begin{document}
+\maketitle
+\section*{Exercice 1 : Le Fed model}
+\subsection*{Partie 1 : Estimation du modèle}
+\subsubsection*{Question 1}
+Il y a clairement une relation entre les deux séries. Cependant la relation linéaire ne semble pas si évidente que cela.
+On a tout de même intérêt à essayer un modèle linéaire en premier afin d'avoir une baseline avant de tester des modèles plus compliqués.
+
+La densité empirique de l'endogène n'est pas gaussienne, elle a plus l'allure d'un mélange de plusieurs gaussiennes.
+Cela n'est pas problématique pour une régression linéaire.
+
+Pour une méthode du d'estimation linéaire du premier ordre cela n'est pas problématique.
+\subsubsection*{Question 2}
+On veut trouver une relation du type $y = \alpha + \beta x$
+La méthode des moindres carrés ordinaires consiste à trouver l'estimateur qui minimise l'erreur au carré, i.e.:
+$$ (\alphahat, \betahat) = \argmin_{\alpha, \beta} \sum (y_i - \alpha - \beta x_i)^2 $$
+
+En dérivant  par rapport à $\alpha$ on obtient
+$$ \sum - 2 (y_i - \alphahat - \betahat x_i) = 0 \iff \ybar = \alphahat + \betahat \xbar$$
+En dérivant  par rapport à $\betahat$ on obtient
+$$ \sum - 2 x_i (y_i - \alphahat - \betahat x_i) = 0 \iff \sum x_i (y_i - \ybar + \betahat \xbar - \betahat x_i) = 0 $$
+$$ \iff n \sum x_i y_i - (\sum x_i) (\sum y_i) + \betahat (\sum x_i)^2 - \betahat n \sum x_i^2 = 0 $$
+$$ \iff \betahat = \frac{n \sum x_i y_i - (\sum x_i) (\sum y_i)}{n \sum x_i^2 - (\sum x_i)^2 } $$
+$$ \iff \betahat = \frac{\sum (x_i - \xbar) (y_i - \ybar)}{\sum (x_i - \xbar)^2 } $$
+$$ \iff \betahat = \frac{Cov(x, y)}{Var(x)} \text{ (covariance et variance empiriques)}$$
+On retrouve donc bien les formules demandées avec $x = r$ et $y = \frac{E}{P}$.
+
+\subsubsection*{Question 3}
+L'estimateur des MCO est sans biais ($E[\betahat] = \beta$), consistant ($\lim_{T \rightarrow \infty} Var[\betahat] = 0$) et c'est le meilleur estimateur parmi les estimateurs linéaires.
+
+Démontrons la consistance.
+\begin{equation*}
+\begin{split}
+  \betahat &= \frac{\sum (x_i - \xbar) (y_i - \ybar)}{\sum (x_i - \xbar)^2 }\\
+           & \longrightarrow_{T \rightarrow \infty} \frac{Cov(x, y)}{Var(x)} \text{ (d'après la loi des grands nombres)}\\
+           &\longrightarrow_{T \rightarrow \infty}  \frac{Cov(x, \alpha + \beta x + \epsilon)}{Var(x)}\\
+           & \longrightarrow_{T \rightarrow \infty}  \frac{Cov(x, \beta x) + Cov(x, \epsilon)}{Var(x)}\\
+           & \longrightarrow_{T \rightarrow \infty}  \beta + \frac{Cov(x, \epsilon)}{Var(x)}\\
+           & \longrightarrow_{T \rightarrow \infty}  \beta \text{ (Parce que $x$ est indépendant de $\epsilon$)}
+\end{split}
+\end{equation*}
+
+Donc
+$$ \lim_{T \rightarrow \infty} Var(\betahat) = \lim_{T \rightarrow \infty} E(\betahat - \beta) = 0$$
+
+\subsubsection*{Question 4}
+Insérer figure ici
+
+Le coefficient associé à $TX10$ est positif et supérieur à $1$.
+Les statistiques de Student indiquent une grande significativité  des coefficients ($pvalue <2*10^{-16}$). La statistique de Fisher indique que la non nullité simultanée des coefficients est statistiquement significative ($pvalue <2*10^{-16}$ de même).
+
+En revanche le $R^2$ est très faible, ce qui n'est pas surprenant au vu de la variabilité du graphique opposant $PER$ à $TX10$.
+
+Montrons que $R^2 = \frac{cov(X_t,Y_t)^2}{Var(X_t)Var(Y_t)}$
+
+Nous avons:
+$$ R^2 = \frac{\sum_i{(\yhat_i - \ybar)^2}}{\sum{(y_i - \ybar)^2}} $$
+En utilisant le fait que $\yhat_i = \betahat \xhat_i + \alphahat$ et que $\alphahat = \ybar - \betahat \xbar$,
+$$ \sum_i{(\yhat_i - \ybar)^2} = \sum_i{(\alphahat + \betahat x_i - \ybar)^2} $$
+$$ \sum_i{(\yhat_i - \ybar)^2} = \sum_i{(\ybar - \betahat \xbar + \betahat x_i - \ybar)^2} $$
+$$ \sum_i{(\yhat_i - \ybar)^2} = \betahat^2 \sum_i{(x_i - \xbar)^2} $$
+En utilisant le le fait que  $\betahat = \frac{\sum_i{(x_i-\xbar)(y_i-\ybar)}}{\sum_i(x_i-\xbar)^2}$, on obtient
+$$ \sum_i{(\yhat_i - \ybar)^2} = \frac{(\sum_i{(x_i-\xbar)(y_i-\ybar))^2}}{\sum_i(x_i-\xbar)^2}$$
+Enfin,
+$$R^2 = \frac{(\sum_i{(x_i-\xbar)(y_i-\ybar))^2}}{\sum_i(x_i-\xbar)^2 \sum_i(x_i-\xbar)^2}$$
+$$R^2 = \frac{cov(X,Y)^2}{\sigma_X^2 \sigma_Y^2} $$
+
+\subsection*{Partie 2 : Estimation d'une nouvelle spécification et comparaison}
+\subsubsection*{Question 5}
+En utilisant le taux d'intérêt réel comme variable prédictive, on obtient une régression au pouvoir prédictif amélioré : le $R^2$ évolue de $0.272$ à $0.312$
+
+\subsubsection*{Question 6}
+Les mesures d'erreur RMSE et MAE confirment le précédent résultat. La RMSE passe de $4.12$ à $4.09$ en utilisant les taux réels, et la MAE passe de $3.36$ à $3.26$.
+
+\subsubsection*{Question 7}
+En utilisant la routine développée pour évaluer savoir si le modèle avec les taux réels est plus pertinent que l'autre, on obtient une statistique très grande quelque soit la valeur de h (en moyenne $|SDM| ~
+8*10^6$, à comparer avec $1.96$. On en conclut que le modèle utilisant les taux réels apporte une réelle amélioration.
+
+\subsubsection*{Question 8.a}
+Les $\beta$ sont très instables, et les intervalles de confiance très grands.
+Le modèle est donc imparfait. Nous allons étudier à la question suivante si ces instabilités sont aléatoires ou sont liès à une évolution structurelle de la relation entre les données.
+
+\subsubsection*{Question 8.b}
+Le test CUSUM permet d'évaluer la stabilité du coefficient $\beta$.
+On évalue une statistique don l'hypothèse nulle est la constance du coefficient.
+On calcule d'abord les résidus par estimation récursive du coefficient.
+On compare ensuite l'évolution de la somme de ces résidus à une marche aléatoire (de variance $\sqrt{n}$).
+Si la somme des résidus ne dépasse pas un certain seuil, alors on peut affirmer qu'ils sont aléatoires et donc que le coefficient est stable (pas d'évolution structuerelle du modèle au cours du temps).
+
+On constate en effet sur le test CUSUM sur les résidus récursifs que le seuil est largement dépassé, notre modèle n'est donc pas stable et n'est pas adapté.
+
+
+\subsubsection*{Question 9}
+La lente décroissance des autocorrélations semble indiquer une tendance non éliminée.
+Avec l'autocorrélation partielle en revanche, on ne note pas d'autocorrélation avec lag.
+
+\end{document}
