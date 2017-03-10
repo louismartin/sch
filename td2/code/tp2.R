@@ -1,32 +1,87 @@
-plot_series <- function (x, name="Serie"){
-  par(mfrow=c(3,1))
-  plot(x, type='o', main=name)
+plot_corr <- function (x, name="Serie"){
+  par(mfrow=c(1,2))
+  # plot(x, type='o', main=name)
   abline(h=0)
-  acf(x, main="ACF")
-  pacf(x, main="PACF")
+  acf(x, main=sprintf("%s ACF", name))
+  pacf(x, main=sprintf("%s PACF", name))
 }
 
-# MA1
-theta1 <- 0.8
-MA1 <-arima.sim(n=200, list(ma=c(theta1)))
-plot_series(MA1, "Serie MA")
-
 # AR1
-phi1 <- 0.8
-AR1<-arima.sim(n=200, list(ar=c(phi1)))
-plot_series(AR1, "Serie AR")
+phi1 <- 0.5
+AR1<-arima.sim(n=1000, list(ar=c(phi1)))
+plot_corr(AR1, "Serie AR1")
+
+# MA1
+theta1 <- 0.5
+MA1 <-arima.sim(n=1000, list(ma=c(theta1)))
+plot_corr(MA1, "Serie MA1")
 
 # Random walk
 RW <- cumsum(rnorm(n=1000, sd=1))
-plot_series(RW, "Marche aleatoire")
+par(mfrow=c(1,1))
+plot(RW, type='l', main="Marche aleatoire")
+plot_corr(RW, "Marche aleatoire")
 
 
 # Partie B
-# Question 2
 df = read.csv("cpi_2017.csv", header=T, sep = ";")
-I = df$Etats.Unis
-inflation = diff(log(I))
-plot_series(inflation, name="Inflation")
+
+# Question 2
+indice_prix = ts(df$Etats.Unis, frequency=12, start=c(1996, 01))
+inflation_mensuelle = diff(log(indice_prix))
+plot_corr(inflation_mensuelle, name="Inflation mensuelle Etats-Unis")
 
 # Question 3
-plot_series(ts(inflation, frequency=12))
+inflation_annuelle = diff(log(indice_prix), lag=12)
+par(mfrow=c(1,1))
+plot(inflation_annuelle, type='l', main="Inflation annuelle Etats-Unis")
+plot_corr(inflation_annuelle, "Inflation annuelle Etats-Unis")
+
+# Question 4
+indice_prix = ts(df$France, frequency=12, start=c(1996, 01))
+par(mfrow=c(1,1))
+plot(inflation_annuelle, type='l', main="Inflation annuelle France")
+inflation_annuelle = diff(log(indice_prix), lag=12)
+plot_corr(inflation_annuelle, "Inflation annuelle France")
+
+# Question 5
+best_aic <- Inf
+best_p <- NULL
+best_q <- NULL
+for (p in 0:6){
+  print(p)
+  for (q in 0:13){
+    aic <- arima(inflation_annuelle, order=c(p,0,q))$aic
+    best_aic = min(aic, best_aic)
+    if (aic == best_aic){
+      print("best p ")
+      print(p)
+      print("best q ")
+      print(q)
+      best_p = p
+      best_q = q
+    }
+  }
+}
+
+
+# Question 6
+model = arima(inflation_annuelle, order=c(best_p,0,best_q), method="ML")
+
+# Question 7
+# Les résidus sont déjà calculés dans le model
+plot_corr(model$residuals, "Résidus")
+# Prévisions
+for (months in c(3, 6, 12)) {
+  pred = predict(model, n.ahead=months, level=5)
+  upper_bound = pred$pred + 1.96*pred$se
+  lower_bound = pred$pred - 1.96*pred$se
+  y_max = max(upper_bound)
+  y_min = min(lower_bound)
+
+  par(mfrow=c(1,1))
+  plot(pred$pred, ylim=c(y_min, y_max), main=sprintf("Predictions à %s mois", months) )
+  lines(lower_bound, col="red")
+  lines(upper_bound, col="red")
+}
+
