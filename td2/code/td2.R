@@ -64,7 +64,6 @@ for (p in 0:6){
   }
 }
 
-
 # Question 6
 model = arima(inflation_annuelle, order=c(best_p,0,best_q), method="ML")
 
