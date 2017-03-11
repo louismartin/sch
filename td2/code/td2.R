@@ -85,3 +85,12 @@ for (months in c(3, 6, 12)) {
   lines(upper_bound, col="red")
 }
 
+# Question 8
+library(car)
+# Durbin-Watson
+test <- durbinWatsonTest(as.numeric(model$residuals))
+print(test)
+
+# Ljung-Box
+for (i in 1:12) print(Box.test(model$residuals,lag=i,type='Ljung-Box')$p.value)
+
