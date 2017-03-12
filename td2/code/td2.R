@@ -68,9 +68,9 @@ for (p in 0:6){
 model = arima(inflation_annuelle, order=c(best_p,0,best_q), method="ML")
 
 # Question 7
-# Les résidus sont déjà calculés dans le model
-plot_corr(model$residuals, "Résidus")
-# Prévisions
+# Les residus sont deja calcules dans le model
+plot_corr(model$residuals, "Residus")
+# Previsions
 for (months in c(3, 6, 12)) {
   pred = predict(model, n.ahead=months, level=5)
   upper_bound = pred$pred + 1.96*pred$se
@@ -79,7 +79,7 @@ for (months in c(3, 6, 12)) {
   y_min = min(lower_bound)
 
   par(mfrow=c(1,1))
-  plot(pred$pred, ylim=c(y_min, y_max), main=sprintf("Predictions à %s mois", months) )
+  plot(pred$pred, ylim=c(y_min, y_max), main=sprintf("Predictions ?? %s mois", months) )
   lines(lower_bound, col="red")
   lines(upper_bound, col="red")
 }
@@ -93,3 +93,61 @@ print(test)
 # Ljung-Box
 for (i in 1:12) print(Box.test(model$residuals,lag=i,type='Ljung-Box')$p.value)
 
+
+#############################
+# Partie 2
+#############################
+
+df2 <- read_delim("~/Documents/1_ECP/3A/12_Time_Series/sch-master/td2/data_td2.csv", ";", 
+                escape_double = FALSE, trim_ws = TRUE)
+
+# Question 1
+# Rendement sans dividende
+rendement <- function(data=df2, titre){
+    titre <-  df2[[titre]]
+    return (titre[2:length(titre)]-titre[1:(length(titre)-1)]) / titre[1:(length(titre)-1)]
+}
+rTOTAL <- rendement(titre='TOTAL')
+rCAC40 <- rendement(titre='CAC40')
+ 
+hist(rTOTAL, probability = TRUE, nclass = 30, main = "Densite empirique du rendement du titre TOTAL")
+hist(rCAC40, probability = TRUE, nclass = 30, main = "Densite empirique du rendement de l'indice CAC40")
+
+qqnorm(rTOTAL)
+qqline(rTOTAL)
+qqnorm(rCAC40)
+qqline(rCAC40)
+
+# Question 2
+r10Y <- rendement(titre='10y')
+
+exces_titre <- rTOTAL - r10Y
+exces_marche <- rCAC40 - r10Y
+plot(exces_titre, exces_marche)
+
+# Question 4
+lmodel <- lm(exces_titre~exces_marche)
+summary(lmodel)
+
+# Question 5
+residus <- lmodel$residuals
+plot_corr(lmodel$residuals, "Residus")
+
+# Question 6
+plot_corr(rTOTAL)
+arima(rTOTAL)
+best_aic = Inf
+for (p in 0:6){
+    for (q in 0:15){
+        aic <- arima(rTOTAL, order=c(p,0,q))$aic
+        best_aic = min(aic, best_aic)
+        if (aic == best_aic){
+            print("best p ")
+            print(p)
+            print("best q ")
+            print(q)
+            best_p = p
+            best_q = q
+        }
+    }
+}
